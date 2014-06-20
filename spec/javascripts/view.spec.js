@@ -106,7 +106,6 @@ describe('base view', function() {
       this.view = new Marionette.View();
 
       this.removeSpy = this.sinon.spy(this.view, 'remove');
-      this.destroySpy = this.sinon.spy(this.view, 'destroy');
 
       this.destroyStub = this.sinon.stub();
       this.view.on('destroy', this.destroyStub);

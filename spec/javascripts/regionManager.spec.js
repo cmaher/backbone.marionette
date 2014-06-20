@@ -231,8 +231,8 @@ describe('regionManager', function() {
       expect(this.regionManager.length).to.equal(0);
     });
 
-    it('should return the region manager', function() {
-      expect(this.regionManager.removeRegion).to.have.returned(this.regionManager);
+    it('should return the region', function() {
+      expect(this.regionManager.removeRegion).to.have.returned(this.region);
     });
   });
 
@@ -247,6 +247,7 @@ describe('regionManager', function() {
       this.regionManager = new Marionette.RegionManager();
       this.region = this.regionManager.addRegion('foo', '#foo');
       this.r2 = this.regionManager.addRegion('bar', '#bar');
+      this.regions = this.regionManager.getRegions();
 
       this.region.show(new Backbone.View());
       this.r2.show(new Backbone.View());
@@ -283,8 +284,8 @@ describe('regionManager', function() {
       expect(this.removeHandler).to.have.been.calledWith('bar', this.r2);
     });
 
-    it('should return the region manager', function() {
-      expect(this.regionManager.removeRegions).to.have.returned(this.regionManager);
+    it('should return the regions', function() {
+      expect(this.regionManager.removeRegions).to.have.returned(this.regions);
     });
   });
 

@@ -41,8 +41,6 @@ _.extend(Marionette.Application.prototype, Backbone.Events, {
     this.triggerMethod('before:start', options);
     this._initCallbacks.run(options, this);
     this.triggerMethod('start', options);
-
-    return this;
   },
 
   // Add regions to your app.
