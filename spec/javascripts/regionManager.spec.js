@@ -298,6 +298,7 @@ describe('regionManager', function() {
 
       this.regionManager = new Marionette.RegionManager();
       this.region = this.regionManager.addRegion('foo', '#foo');
+      this.regions = this.regionManager.getRegions();
       this.region.show(new Backbone.View());
 
       this.region.on('empty', this.emptyHandler);
@@ -314,8 +315,8 @@ describe('regionManager', function() {
       expect(this.regionManager.get('foo')).to.equal(this.region);
     });
 
-    it('should return the region manager', function() {
-      expect(this.regionManager.emptyRegions).to.have.returned(this.regionManager);
+    it('should return the regions', function() {
+      expect(this.regionManager.emptyRegions).to.have.returned(this.regions);
     });
   });
 

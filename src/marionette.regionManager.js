@@ -90,11 +90,12 @@ Marionette.RegionManager = (function(Marionette) {
     // Empty all regions in the region manager, but
     // leave them attached
     emptyRegions: function() {
-      _.each(this._regions, function(region) {
+      var regions = this.getRegions();
+      _.each(regions, function(region) {
         region.empty();
       }, this);
 
-      return this;
+      return regions;
     },
 
     // Destroy all regions and shut down the region
