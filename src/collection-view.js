@@ -92,17 +92,15 @@ Marionette.CollectionView = Marionette.View.extend({
   // Handle a child added to the collection
   _onCollectionAdd: function(child, collection, opts) {
     var index;
+    if (opts.at !== undefined) {
+      index = opts.at;
+    } else {
+      index = this._sortedModels().indexOf(child);
+    }
 
-    if (this.testChild(child)) {
+    if (this.testChild(child, index)) {
       this.destroyEmptyView();
       var ChildView = this.getChildView(child);
-
-      if (opts.at !== undefined) {
-        index = opts.at;
-      } else {
-        index = this._sortedModels().indexOf(child);
-      }
-
       this.addChild(child, ChildView, index);
     }
   },
@@ -182,7 +180,7 @@ Marionette.CollectionView = Marionette.View.extend({
     var models = this._sortedModels();
 
     _.each(models, function(child, index) {
-      if (this.testChild(child)) {
+      if (this.testChild(child, index)) {
         ChildView = this.getChildView(child);
         this.addChild(child, ChildView, index);
       }
@@ -503,17 +501,12 @@ Marionette.CollectionView = Marionette.View.extend({
     return childViews;
   },
 
-  // Return a function for determining whether or not to display a given model
-  // The function must match the interface (Model) -> Boolean
-  getFilter: function() {
-    return this.getOption('filter');
-  },
-
   // Return true if the given child should be shown
   // Return false otherwise
-  testChild: function (child) {
-    var filter = this.getFilter();
-    return !_.isFunction(filter) || filter(child);
+  // The filter function must match the interface (child, index, collection) -> Boolean
+  testChild: function (child, index) {
+    var filter = this.getOption('filter');
+    return !_.isFunction(filter) || filter.call(this, child, index, this.collection);
   },
 
   // Set up the child view event forwarding. Uses a "childview:"
