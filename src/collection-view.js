@@ -92,17 +92,17 @@ Marionette.CollectionView = Marionette.View.extend({
   // Handle a child added to the collection
   _onCollectionAdd: function(child, collection, opts) {
     var index;
-
-    this.destroyEmptyView();
-    var ChildView = this.getChildView(child);
-
     if (opts.at !== undefined) {
       index = opts.at;
     } else {
       index = this._sortedModels().indexOf(child);
     }
 
-    this.addChild(child, ChildView, index);
+    if (this.shouldAddChild(child, index)) {
+      this.destroyEmptyView();
+      var ChildView = this.getChildView(child);
+      this.addChild(child, ChildView, index);
+    }
   },
 
   // get the child view by model it holds, and remove it
@@ -170,6 +170,11 @@ Marionette.CollectionView = Marionette.View.extend({
       this.showCollection();
       this.endBuffering();
       this.triggerMethod('render:collection', this);
+
+      // If we have shown children and none have passed the filter, show the empty view
+      if (this.children.isEmpty()) {
+        this.showEmptyView();
+      }
     }
   },
 
@@ -180,8 +185,10 @@ Marionette.CollectionView = Marionette.View.extend({
     var models = this._sortedModels();
 
     _.each(models, function(child, index) {
-      ChildView = this.getChildView(child);
-      this.addChild(child, ChildView, index);
+      if (this.shouldAddChild(child, index)) {
+        ChildView = this.getChildView(child);
+        this.addChild(child, ChildView, index);
+      }
     }, this);
   },
 
@@ -497,6 +504,37 @@ Marionette.CollectionView = Marionette.View.extend({
     this.children.each(this.removeChildView, this);
     this.checkEmpty();
     return childViews;
+  },
+
+  // Return true if the given child should be shown
+  // Return false otherwise
+  // The filter will be passed (child, index, collection)
+  // Where
+  //  'child' is the given model
+  //  'index' is the index of that model in the collection
+  //  'collection' is the collection referenced by this CollectionView
+  shouldAddChild: function (child, index) {
+    var filter = this.getOption('filter');
+    return !_.isFunction(filter) || filter.call(this, child, index, this.collection);
+  },
+
+  // Update the filter for this collection view
+  // The filter will be used by shouldAddChild instead of the previous filter
+  // This will cause the view to re-render,
+  //  if the view has already been rendered and is not destroyed
+  setFilter: function (filter, options) {
+    if (this.filter === filter) { return; }
+    this.filter = filter;
+    var preventRender = _.result(options, 'preventRender');
+    if (this.isRendered && !this.isDestroyed && !preventRender) {
+      this.render();
+    }
+  },
+
+  // Remove the filter and cause the view to re-render
+  //  if the view has already been rendered and is not destroyed
+  removeFilter: function (options) {
+    this.setFilter(null, options);
   },
 
   // Set up the child view event forwarding. Uses a "childview:"

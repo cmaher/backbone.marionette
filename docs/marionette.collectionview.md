@@ -54,6 +54,7 @@ will provide features such as `onShow` callbacks, etc. Please see
 * [CollectionView's attachHtml](#collectionviews-attachhtml)
 * [CollectionView's resortView](#collectionviews-resortview)
 * [CollectionView's viewComparator](#collectionviews-viewcomparator)
+* [CollectionView's `filter`](#collectionviews-filter)
 * [CollectionView's children](#collectionviews-children)
 * [CollectionView destroy](#collectionview-destroy)
 
@@ -782,6 +783,69 @@ CollectionView allows for a custom `viewComparator` option if you want your Coll
 ```
 
 The `viewComparator` can take any of the acceptable `Backbone.Collection` [comparator formats](http://backbonejs.org/#Collection-comparator) -- a sortBy (pass a function that takes a single argument), as a sort (pass a comparator function that expects two arguments), or as a string indicating the attribute to sort by.
+
+## CollectionView's `filter`
+
+CollectionView allows for a custom `filter` option if you want to prevent some of the
+underlying `collection`'s models from being rendered as child views.
+The filter function takes a model from the collection and returns a truthy value if the child should be rendered,
+and a falsey value if it should not.
+
+To change the `filter` and re-render the collection view, call `setFilter` with the new filter function.
+`setFilter` will not cause the view to render if
+
+* the view has not yet been rendered
+* the view has been destroyed
+* the new `filter` is the same as the existing `filter`
+* `{ preventRender: true }` is passed in the `options`
+
+To remove the filter, use `removeFilter`, which accepts the same options
+as `setFilter` and will cause a re-render under the same conditions.
+
+```js
+  var cv = new Marionette.CollectionView({
+    childView: SomeChildView,
+    emptyView: SomeEmptyView,
+    collection: new Backbone.Collection([
+      { value: 1 },
+      { value: 2 },
+      { value: 3 },
+      { value: 4 }
+    ]),
+
+    // Only show views with even values
+    filter: function (child, index, collection) {
+      return child.get('value') % 2 === 0;
+    }
+  });
+
+  // renders the views with values '2' and '4'
+  cv.render();
+
+  // removes the filter, re-renders and shows all views
+  cv.removeFilter();
+
+  // re-renders the collection view, showing the views with values '1' and '3'
+  cv.setFilter(function (child, index, collection) {
+    return child.get('value') % 2 !== 0;
+  });
+
+  // removes the filter, but does not re-render
+  cv.removeFilter({ preventRender: false });
+
+  // shows all views, using the new filter
+  cv.render();
+
+  // re-renders the collection view, showing the empty view
+  cv.setFilter(function (child, index, collection) { return false; });
+
+  // updates the filter, but does not re-render
+  cv.setFilter(function (child, index, collection) { return true; }, { preventRender: true });
+
+  // shows all views, using the new filter
+  cv.render();
+```
+
 
 ## CollectionView's children
 
