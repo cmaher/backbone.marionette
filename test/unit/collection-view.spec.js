@@ -97,12 +97,15 @@ describe('collection view', function() {
 
   describe('when rendering a collection view', function() {
     beforeEach(function() {
-      this.collection = new Backbone.Collection([{foo: 'bar'}, {foo: 'baz'}]);
+      this.collection = new Backbone.Collection([{foo: 'bar'}, {foo: 'baz'}, {foo: 'rejected'}]);
 
       this.childViewRender = this.sinon.stub();
 
       this.collectionView = new this.MockCollectionView({
-        collection: this.collection
+        collection: this.collection,
+        filter: function (model) {
+          return model.get('foo') !== 'rejected';
+        }
       });
 
       this.collectionView.on('childview:render', this.childViewRender);
@@ -119,6 +122,7 @@ describe('collection view', function() {
       this.sinon.spy(this.collectionView, 'startBuffering');
       this.sinon.spy(this.collectionView, 'endBuffering');
       this.sinon.spy(this.collectionView, 'getChildView');
+      this.sinon.spy(this.collectionView, 'addChild');
 
       this.collectionView.render();
     });
@@ -227,6 +231,11 @@ describe('collection view', function() {
       expect(this.collectionView.getChildView).to.have.been.calledTwice.
         and.calledWith(this.collection.models[0]).
         and.calledWith(this.collection.models[1]);
+    });
+
+    it('should not add a view for models rejected by the filter', function() {
+      expect(this.collectionView.children.findByModel(this.collection.models[2]))
+        .not.to.exist;
     });
 
     it('should be marked rendered', function() {
@@ -363,6 +372,7 @@ describe('collection view', function() {
       this.collectionView.on('childview:render', this.childViewRender);
 
       this.sinon.spy(this.collectionView, 'attachHtml');
+      this.sinon.spy(this.collectionView, 'destroyEmptyView');
 
       this.model = new Backbone.Model({foo: 'bar'});
       this.collection.add(this.model);
@@ -383,6 +393,39 @@ describe('collection view', function() {
     it('should trigger the childview:render event from the collectionView', function() {
       expect(this.childViewRender).to.have.been.called;
     });
+
+    it('should destroy the empty view', function() {
+      expect(this.collectionView.destroyEmptyView).to.have.been.called;
+    });
+  });
+
+  describe('when a model is added to the collection but rejected by the view\'s filter', function() {
+    beforeEach(function() {
+      this.collection = new Backbone.Collection();
+      this.EmptyView = Backbone.Marionette.ItemView.extend({
+        template: function () { return 'empty'; }
+      });
+      this.collectionView = new this.MockCollectionView({
+        collection: this.collection,
+        filter: function() {
+          return false;
+        },
+        emptyView: this.EmptyView
+      });
+      this.collectionView.render();
+      this.sinon.spy(this.collectionView, 'destroyEmptyView');
+
+      this.model = new Backbone.Model({foo: 'bar'});
+      this.collection.add(this.model);
+    });
+
+    it('should contain the empty view in the DOM', function() {
+      expect($(this.collectionView.$el)).to.contain.$text('empty');
+    });
+
+    it('should destroy the empty view', function() {
+      expect(this.collectionView.destroyEmptyView).not.to.have.been.called;
+    });
   });
 
   describe('when a model is added to a non-empty collection', function() {
@@ -391,7 +434,10 @@ describe('collection view', function() {
 
       this.collectionView = new this.MockCollectionView({
         childView: this.ChildView,
-        collection: this.collection
+        collection: this.collection,
+        filter: function (model) {
+          return model.get('foo') !== 'rejected';
+        }
       });
       this.collectionView.render();
 
@@ -401,7 +447,9 @@ describe('collection view', function() {
       this.sinon.spy(this.collectionView, 'attachHtml');
 
       this.model = new Backbone.Model({foo: 'baz'});
+      this.rejectedModel = new Backbone.Model({foo: 'rejected'});
       this.collection.add(this.model);
+      this.collection.add(this.rejectedModel);
     });
 
     it('should add the model to the list', function() {
@@ -424,6 +472,11 @@ describe('collection view', function() {
       var children = this.collectionView._getImmediateChildren();
       expect(children[0]._parent).to.deep.equal(this.collectionView);
       expect(children[1]._parent).to.deep.equal(this.collectionView);
+    });
+
+    it('should not add a view for models rejected by the filter', function() {
+      expect(this.collectionView.children.findByModel(this.rejectedModel))
+        .not.to.exist;
     });
   });
 
