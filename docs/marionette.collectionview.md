@@ -800,7 +800,7 @@ and a falsey value if it should not.
         { value: 3 },
         { value: 4 }
     ]),
-    filter: function (model) {
+    filter: function (model, index, collection) {
         return model.get('value') % 2 === 0;
     }
   });

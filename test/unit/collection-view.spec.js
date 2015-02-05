@@ -585,6 +585,40 @@ describe('collection view', function() {
     });
   });
 
+  describe('when a model that does not pass the filter is removed from the collection', function() {
+    beforeEach(function() {
+      this.model = new Backbone.Model({foo: 'bar'});
+      this.rejectedModel = new Backbone.Model({ foo: 'rejected' });
+      this.collection = new Backbone.Collection([this.model, this.rejectedModel]);
+
+      this.CollectionView = this.MockCollectionView.extend({
+        indexToReject: 1,
+        filter: function(model, index) {
+          return index !== this.indexToReject;
+        }
+      });
+
+      this.collectionView = new this.CollectionView({
+        childView: this.ChildView,
+        collection: this.collection
+      });
+      this.collectionView.render();
+
+      this.sinon.spy(this.collectionView, 'onBeforeRemoveChild');
+      this.sinon.spy(this.collectionView, 'onRemoveChild');
+
+      this.collection.remove(this.rejectedModel);
+    });
+
+    it('should not execute onBeforeRemoveChild', function() {
+      expect(this.collectionView.onBeforeRemoveChild).not.to.have.been.called;
+    });
+
+    it('should not execute onRemoveChild', function() {
+      expect(this.collectionView.onRemoveChild).not.to.have.been.called;
+    });
+  });
+
   describe('when destroying a collection view', function() {
     beforeEach(function() {
       this.EventedView = Backbone.Marionette.CollectionView.extend({
