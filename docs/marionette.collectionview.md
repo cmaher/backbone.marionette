@@ -791,21 +791,36 @@ underlying `collection`'s models from being rendered as child views.
 The filter function takes a model from the collection and returns a truthy value if the child should be rendered,
 and a falsey value if it should not.
 
+To change the `filter` and update the collection view, call `setFilter` with the new filter function.
+`setFilter` will not cause the view to render if the view has not yet been rendered, if the view has been destroyed, if the `filter` is the same as the existing `filter`, or if `{ preventRender: true }` is passed in the `options`.
+
 ```js
   var cv = new Marionette.CollectionView({
     childView: SomeChildView,
+    emptyView: SomeEmptyView,
     collection: new Backbone.Collection([
-        { value: 1 },
-        { value: 2 },
-        { value: 3 },
-        { value: 4 }
+      { value: 1 },
+      { value: 2 },
+      { value: 3 },
+      { value: 4 }
     ]),
-    filter: function (model, index, collection) {
-        return model.get('value') % 2 === 0;
+    filter: function (child, index, collection) {
+      return child.get('value') % 2 === 0;
     }
   });
 
   cv.render(); // renders the views with values '2' and '4'
+
+  cv.setFilter(function (child) {
+    return child.get('value') % 2 !== 0;
+  }); // re-renders the collection view, showing the views with values '1' and '3'
+
+  cv.setFilter(function () { return false; }); // re-renders the collection view, showing the empty view
+
+  cv.setFilter(function () { return true; }, { preventRender: true }); // update the filter, but does not re-render
+  cv.render(); // shows all views
+
+  cv.setFilter(); // removes the filter, re-render and show all views
 ```
 
 

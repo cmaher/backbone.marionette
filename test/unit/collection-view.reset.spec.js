@@ -2,13 +2,7 @@ describe('collection view - reset', function() {
   'use strict';
 
   beforeEach(function() {
-    this.Collection = Backbone.Collection.extend({
-      filterFn: function(model) {
-        return model.get('foo') !== 'rejected';
-      }
-    });
-
-    this.collection = new this.Collection();
+    this.collection = new Backbone.Collection();
 
     this.ItemView = Backbone.Marionette.ItemView.extend({
       template: _.template('<%= foo %>')
@@ -24,17 +18,14 @@ describe('collection view - reset', function() {
     });
 
     this.collectionView = new this.CollectionView({
-      collection: this.collection,
-      filter: function(model, index, collection) {
-        return collection.filterFn(model);
-      }
+      collection: this.collection
     });
   });
 
   describe('when a collection is reset after the view is loaded', function() {
     beforeEach(function() {
       this.collectionView.render();
-      this.collection.reset([{foo: 'bar'}, {foo: 'baz'}, {foo: 'rejected'}]);
+      this.collection.reset([{foo: 'bar'}, {foo: 'baz'}]);
     });
 
     it('should destroy all open child views', function() {

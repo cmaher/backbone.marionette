@@ -170,6 +170,11 @@ Marionette.CollectionView = Marionette.View.extend({
       this.showCollection();
       this.endBuffering();
       this.triggerMethod('render:collection', this);
+
+      // If we have shown children and none have passed the filter, show the empty view
+      if (this.children.isEmpty()) {
+        this.showEmptyView();
+      }
     }
   },
 
@@ -503,10 +508,26 @@ Marionette.CollectionView = Marionette.View.extend({
 
   // Return true if the given child should be shown
   // Return false otherwise
-  // The filter function must match the interface (child, index, collection) -> Boolean
+  // The filter will be passed (child, index, collection)
+  // Where
+  //  'child' is the given model
+  //  'index' is the index of that model in the collection
+  //  'collection' is the collection referenced by this CollectionView
   testChild: function (child, index) {
     var filter = this.getOption('filter');
     return !_.isFunction(filter) || filter.call(this, child, index, this.collection);
+  },
+
+  // Update the filter for this collection view
+  // The filter will be used by testChild instead of the previous filter
+  // This will cause the view
+  setFilter: function (filter, options) {
+    if (this.filter === filter) { return; }
+    options = options || {};
+    this.filter = filter;
+    if (this.isRendered && !this.isDestroyed && !options.preventRender) {
+      this.render();
+    }
   },
 
   // Set up the child view event forwarding. Uses a "childview:"
